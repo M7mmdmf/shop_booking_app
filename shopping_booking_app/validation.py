@@ -1,5 +1,5 @@
 import re
-from constants import ERROR_MESSAGES, SHOP_LOCATIONS, LUXURY_SHOPS
+from constants import ERROR_MESSAGES, LUXURY_SHOPS
 
 def validate_email(email: str) -> bool:
     """
@@ -12,9 +12,7 @@ def validate_email(email: str) -> bool:
         bool: True if valid, False otherwise.
     """
     email_regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-    if re.match(email_regex, email):
-        return True
-    return False
+    return bool(re.match(email_regex, email))
 
 def validate_phone(phone: str) -> bool:
     """
@@ -27,9 +25,7 @@ def validate_phone(phone: str) -> bool:
         bool: True if valid, False otherwise.
     """
     phone_regex = r"^\d{8,15}$"  # 8 to 15 digits
-    if re.match(phone_regex, phone):
-        return True
-    return False
+    return bool(re.match(phone_regex, phone))
 
 def validate_booking_time(time: str) -> bool:
     """
@@ -42,23 +38,7 @@ def validate_booking_time(time: str) -> bool:
         bool: True if valid, False otherwise.
     """
     time_regex = r"^(0[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$"  # Format: HH:MM AM/PM
-    if re.match(time_regex, time):
-        return True
-    return False
-
-def validate_shop_location(location: str) -> bool:
-    """
-    Validates if the shop location is in the predefined list of locations.
-    
-    Args:
-        location (str): The shop location to validate.
-    
-    Returns:
-        bool: True if valid, False otherwise.
-    """
-    if location in SHOP_LOCATIONS:
-        return True
-    return False
+    return bool(re.match(time_regex, time))
 
 def validate_shop_name(shop_name: str) -> bool:
     """
@@ -70,11 +50,22 @@ def validate_shop_name(shop_name: str) -> bool:
     Returns:
         bool: True if valid, False otherwise.
     """
-    if shop_name in LUXURY_SHOPS:
-        return True
-    return False
+    return shop_name in LUXURY_SHOPS
 
-def validate_all_fields(email: str, phone: str, time: str, location: str, shop_name: str) -> str:
+def validate_shop_location(shop_name: str, location: str) -> bool:
+    """
+    Validates if the location matches one of the shop's predefined locations.
+    
+    Args:
+        shop_name (str): The selected shop name.
+        location (str): The selected location.
+    
+    Returns:
+        bool: True if the location matches one of the shop's locations, False otherwise.
+    """
+    return location in LUXURY_SHOPS.get(shop_name, [])
+
+def validate_all_fields(email: str, phone: str, time: str, shop_name: str, location: str) -> str:
     """
     Validates all user inputs.
 
@@ -82,8 +73,8 @@ def validate_all_fields(email: str, phone: str, time: str, location: str, shop_n
         email (str): User's email address.
         phone (str): User's phone number.
         time (str): Booking time.
-        location (str): Shop location.
         shop_name (str): Shop name.
+        location (str): Shop location.
 
     Returns:
         str: Error message if validation fails, or an empty string if all inputs are valid.
@@ -94,8 +85,8 @@ def validate_all_fields(email: str, phone: str, time: str, location: str, shop_n
         return ERROR_MESSAGES["invalid_phone"]
     if not time or not validate_booking_time(time):
         return ERROR_MESSAGES["invalid_time"]
-    if not location or not validate_shop_location(location):
-        return ERROR_MESSAGES["invalid_location"]
     if not shop_name or not validate_shop_name(shop_name):
         return ERROR_MESSAGES["empty_field"]
+    if not location or not validate_shop_location(shop_name, location):
+        return ERROR_MESSAGES["invalid_location"]
     return ""  # All fields are valid
