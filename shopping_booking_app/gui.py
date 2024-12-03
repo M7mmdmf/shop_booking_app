@@ -1,6 +1,8 @@
+import os
 import tkinter as tk
 from tkinter import ttk, messagebox
-from constants import LUXURY_SHOPS, SHOP_LOCATIONS, ERROR_MESSAGES, SUCCESS_MESSAGES
+from PIL import Image, ImageTk
+from constants import LUXURY_SHOPS, SHOP_LOCATIONS, SUCCESS_MESSAGES
 from validation import validate_all_fields
 from csv_handler import initialize_csv, save_booking, search_bookings, sort_bookings
 
@@ -9,7 +11,7 @@ class BookingApp:
         self.root = root
         self.root.title("Shopping and Booking App")
         self.root.geometry("800x600")
-        self.root.configure(bg="#f7f7f7")
+        self.root.configure(bg="#f7f7f7")  # Light background
 
         # Initialize the CSV file
         initialize_csv()
@@ -26,10 +28,24 @@ class BookingApp:
         self.all_shop_names = list(LUXURY_SHOPS.keys())
         self.all_locations = SHOP_LOCATIONS
 
+        # Load icons
+        self.load_icons()
+
         # Layout
         self.create_widgets()
 
+    def load_icons(self):
+        """Load button icons."""
+        try:
+            # Button icons
+            self.submit_icon = ImageTk.PhotoImage(Image.open("assets/submit.png").resize((20, 20)))
+            self.view_icon = ImageTk.PhotoImage(Image.open("assets/view.png").resize((20, 20)))
+            self.search_icon = ImageTk.PhotoImage(Image.open("assets/search.png").resize((20, 20)))
+        except Exception as e:
+            print(f"Error loading icons: {e}")
+
     def create_widgets(self):
+        """Create all the input fields, dropdowns, and buttons."""
         # Title
         title_label = tk.Label(self.root, text="Shopping and Booking App", font=("Arial", 20), bg="#f7f7f7")
         title_label.pack(pady=10)
@@ -69,31 +85,19 @@ class BookingApp:
         button_frame = tk.Frame(self.root, bg="#f7f7f7")
         button_frame.pack(pady=10)
 
-        tk.Button(button_frame, text="Submit Booking", command=self.submit_booking).grid(row=0, column=0, padx=10, pady=10)
-        tk.Button(button_frame, text="View All Bookings", command=self.view_bookings).grid(row=0, column=1, padx=10, pady=10)
-        tk.Button(button_frame, text="Search Booking", command=self.search_booking).grid(row=0, column=2, padx=10, pady=10)
+        tk.Button(button_frame, text=" Submit Booking", image=self.submit_icon, compound="left", command=self.submit_booking).grid(row=0, column=0, padx=10, pady=10)
+        tk.Button(button_frame, text=" View All Bookings", image=self.view_icon, compound="left", command=self.view_bookings).grid(row=0, column=1, padx=10, pady=10)
+        tk.Button(button_frame, text=" Search Booking", image=self.search_icon, compound="left", command=self.search_booking).grid(row=0, column=2, padx=10, pady=10)
 
     def update_locations_based_on_shop(self, event):
-        """
-        Update the locations dropdown based on the selected shop name.
-        """
         selected_shop = self.shop_name.get()
-        if selected_shop in LUXURY_SHOPS:
-            locations = LUXURY_SHOPS[selected_shop]
-            self.location_dropdown["values"] = locations
-        else:
-            self.location_dropdown["values"] = self.all_locations
+        self.location_dropdown["values"] = LUXURY_SHOPS.get(selected_shop, self.all_locations)
 
     def update_shops_based_on_location(self, event):
-        """
-        Update the shop names dropdown based on the selected location.
-        """
         selected_location = self.location.get()
-        filtered_shops = [shop for shop, locations in LUXURY_SHOPS.items() if selected_location in locations]
-        if filtered_shops:
-            self.shop_dropdown["values"] = filtered_shops
-        else:
-            self.shop_dropdown["values"] = self.all_shop_names
+        self.shop_dropdown["values"] = [
+            shop for shop, locations in LUXURY_SHOPS.items() if selected_location in locations
+        ]
 
     def submit_booking(self):
         """
