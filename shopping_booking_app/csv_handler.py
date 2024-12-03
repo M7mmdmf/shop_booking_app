@@ -38,22 +38,16 @@ def save_booking(data: Dict[str, str], file_path: str = CSV_FILE_PATH):
         raise ValueError(ERROR_MESSAGES["csv_error"])
 
 def read_all_bookings(file_path: str = CSV_FILE_PATH) -> List[Dict[str, str]]:
-    """
-    Reads all bookings from the CSV file.
-
-    Args:
-        file_path (str): Path to the CSV file.
-
-    Returns:
-        List[Dict[str, str]]: List of bookings as dictionaries.
-    """
     try:
         with open(file_path, mode='r', encoding='utf-8') as file:
             reader = csv.DictReader(file)
-            return [row for row in reader]
+            data = [row for row in reader]
+            print("DEBUG: Read bookings:", data)  # Add this line
+            return data
     except Exception as e:
         print(f"Error reading bookings: {e}")
         raise ValueError(ERROR_MESSAGES["csv_error"])
+
 
 def search_bookings(query: str, field: str, file_path: str = CSV_FILE_PATH) -> List[Dict[str, str]]:
     """
