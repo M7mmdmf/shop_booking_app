@@ -1,7 +1,13 @@
 import csv
+import os
+import hashlib
 from typing import List, Dict
 from constants import CSV_FILE_PATH, ERROR_MESSAGES
 
+# File paths for storing data
+USERS_CSV_FILE = "data/users.csv"
+
+# Booking CSV Functions
 def initialize_csv(file_path: str = CSV_FILE_PATH):
     """
     Initializes the CSV file with headers if it doesn't exist.
@@ -13,6 +19,7 @@ def initialize_csv(file_path: str = CSV_FILE_PATH):
                 writer.writerow(["User Name", "Email", "Phone", "Shop Name", "Booking Time", "Location"])
     except Exception as e:
         print(f"Error initializing CSV file: {e}")
+
 
 def save_booking(data: Dict[str, str], file_path: str = CSV_FILE_PATH):
     """
@@ -37,12 +44,22 @@ def save_booking(data: Dict[str, str], file_path: str = CSV_FILE_PATH):
         print(f"Error saving booking: {e}")
         raise ValueError(ERROR_MESSAGES["csv_error"])
 
+
 def read_all_bookings(file_path: str = CSV_FILE_PATH) -> List[Dict[str, str]]:
+    """
+    Reads all bookings from the CSV file.
+
+    Args:
+        file_path (str): Path to the CSV file.
+
+    Returns:
+        List[Dict[str, str]]: List of all bookings.
+    """
     try:
         with open(file_path, mode='r', encoding='utf-8') as file:
             reader = csv.DictReader(file)
             data = [row for row in reader]
-            print("DEBUG: Read bookings:", data)  # Add this line
+            print("DEBUG: Read bookings:", data)  # Debugging line
             return data
     except Exception as e:
         print(f"Error reading bookings: {e}")
@@ -68,6 +85,7 @@ def search_bookings(query: str, field: str, file_path: str = CSV_FILE_PATH) -> L
         print(f"Error searching bookings: {e}")
         raise ValueError(ERROR_MESSAGES["csv_error"])
 
+
 def sort_bookings(field: str, descending: bool = False, file_path: str = CSV_FILE_PATH) -> List[Dict[str, str]]:
     """
     Sorts bookings based on a specific field.
@@ -86,3 +104,85 @@ def sort_bookings(field: str, descending: bool = False, file_path: str = CSV_FIL
     except Exception as e:
         print(f"Error sorting bookings: {e}")
         raise ValueError(ERROR_MESSAGES["csv_error"])
+
+
+# User Management Functions
+def initialize_users_csv():
+    """
+    Initializes the users.csv file with headers if it doesn't exist.
+    """
+    if not os.path.exists(USERS_CSV_FILE):
+        with open(USERS_CSV_FILE, mode="a", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            if file.tell() == 0:  # File is empty, add headers
+                writer.writerow(["Username", "Email", "Password"])
+
+
+def hash_password(password: str) -> str:
+    """
+    Hashes a password using SHA-256.
+
+    Args:
+        password (str): The plain text password.
+
+    Returns:
+        str: The hashed password.
+    """
+    return hashlib.sha256(password.encode()).hexdigest()
+
+
+def save_user(username: str, email: str, password: str):
+    """
+    Saves a new user to the users.csv file.
+
+    Args:
+        username (str): The username.
+        email (str): The user's email.
+        password (str): The plain text password.
+    """
+    initialize_users_csv()
+    hashed_password = hash_password(password)
+    with open(USERS_CSV_FILE, mode="a", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow([username, email, hashed_password])
+
+
+def authenticate_user(identifier: str, password: str) -> bool:
+    """
+    Authenticates a user by username/email and password.
+
+    Args:
+        identifier (str): The username or email.
+        password (str): The plain text password.
+
+    Returns:
+        bool: True if authentication is successful, False otherwise.
+    """
+    initialize_users_csv()
+    hashed_password = hash_password(password)
+    with open(USERS_CSV_FILE, mode="r", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            if (row["Username"] == identifier or row["Email"] == identifier) and row["Password"] == hashed_password:
+                return True
+    return False
+
+
+def is_user_registered(username: str, email: str) -> bool:
+    """
+    Checks if a username or email is already registered.
+
+    Args:
+        username (str): The username to check.
+        email (str): The email to check.
+
+    Returns:
+        bool: True if the user is already registered, False otherwise.
+    """
+    initialize_users_csv()
+    with open(USERS_CSV_FILE, mode="r", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            if row["Username"] == username or row["Email"] == email:
+                return True
+    return False
