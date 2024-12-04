@@ -74,37 +74,28 @@ class BookingApp:
 
     def create_widgets(self):
         """Create all the input fields, dropdowns, and buttons."""
-        # Title
         title_label = tk.Label(self.root, text=f"Welcome, {self.username}!", font=("Arial", 20), bg="#f7f7f7")
         title_label.pack(pady=10)
 
-        # Input fields
+        shop_frame = tk.LabelFrame(self.root, text="Select Shop", bg="#f7f7f7", padx=10, pady=10)
+        shop_frame.pack(pady=10)
+        self.create_shop_grid(shop_frame)
+
         form_frame = tk.Frame(self.root, bg="#f7f7f7")
         form_frame.pack(pady=20)
 
         tk.Label(form_frame, text="Phone:", bg="#f7f7f7").grid(row=0, column=0, padx=10, pady=5, sticky="e")
         tk.Entry(form_frame, textvariable=self.phone).grid(row=0, column=1, padx=10, pady=5)
 
-        # Shop Logos Selection
-        shop_frame = tk.LabelFrame(self.root, text="Select Shop", bg="#f7f7f7", padx=10, pady=10)
-        shop_frame.pack(pady=20)
-
-        self.create_shop_grid(shop_frame)
-
-        # Time Slot Dropdown
         tk.Label(form_frame, text="Time Slot:", bg="#f7f7f7").grid(row=1, column=0, padx=10, pady=5, sticky="e")
         self.time_slot_dropdown = ttk.Combobox(form_frame, textvariable=self.booking_time_slot)
-        self.time_slot_dropdown["values"] = []  # Initially empty
         self.time_slot_dropdown.grid(row=1, column=1, padx=10, pady=5)
 
-        # Location Dropdown
         tk.Label(form_frame, text="Location:", bg="#f7f7f7").grid(row=2, column=0, padx=10, pady=5, sticky="e")
         self.location_dropdown = ttk.Combobox(form_frame, textvariable=self.location)
-        self.location_dropdown["values"] = self.all_locations
         self.location_dropdown.bind("<<ComboboxSelected>>", self.update_shops_and_time_slots)
         self.location_dropdown.grid(row=2, column=1, padx=10, pady=5)
 
-        # Buttons
         button_frame = tk.Frame(self.root, bg="#f7f7f7")
         button_frame.pack(pady=10)
 
