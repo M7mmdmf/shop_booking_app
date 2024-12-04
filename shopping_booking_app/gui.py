@@ -40,11 +40,27 @@ class BookingApp:
         self.all_shop_names = list(LUXURY_SHOPS.keys())
         self.all_locations = SHOP_LOCATIONS
 
-        # Load icons
+        # Load assets
+        self.shop_logos = {}
+        self.load_shop_logos()
         self.load_icons()
 
         # Layout
         self.create_widgets()
+
+    def load_shop_logos(self):
+        """Load shop logos into a dictionary."""
+        try:
+            for shop_name in self.all_shop_names:
+                # Replace spaces and special characters for matching filenames
+                logo_path = f"assets/logos/{shop_name.replace(' ', '_').replace('&', 'and').replace('.', '').replace(',', '').lower()}.png"
+                if os.path.exists(logo_path):
+                    self.shop_logos[shop_name] = ImageTk.PhotoImage(Image.open(logo_path).resize((60, 60)))
+                else:
+                    print(f"Logo not found for {shop_name}. Skipping.")
+        except Exception as e:
+            print(f"Error loading shop logos: {e}")
+
 
     def load_icons(self):
         """Load button icons."""
@@ -69,25 +85,24 @@ class BookingApp:
         tk.Label(form_frame, text="Phone:", bg="#f7f7f7").grid(row=0, column=0, padx=10, pady=5, sticky="e")
         tk.Entry(form_frame, textvariable=self.phone).grid(row=0, column=1, padx=10, pady=5)
 
-        # Shop Name Dropdown
-        tk.Label(form_frame, text="Shop Name:", bg="#f7f7f7").grid(row=1, column=0, padx=10, pady=5, sticky="e")
-        self.shop_dropdown = ttk.Combobox(form_frame, textvariable=self.shop_name)
-        self.shop_dropdown["values"] = self.all_shop_names
-        self.shop_dropdown.bind("<<ComboboxSelected>>", self.update_location_and_time_slots)
-        self.shop_dropdown.grid(row=1, column=1, padx=10, pady=5)
+        # Shop Logos Selection
+        shop_frame = tk.LabelFrame(self.root, text="Select Shop", bg="#f7f7f7", padx=10, pady=10)
+        shop_frame.pack(pady=20)
+
+        self.create_shop_grid(shop_frame)
 
         # Time Slot Dropdown
-        tk.Label(form_frame, text="Time Slot:", bg="#f7f7f7").grid(row=2, column=0, padx=10, pady=5, sticky="e")
+        tk.Label(form_frame, text="Time Slot:", bg="#f7f7f7").grid(row=1, column=0, padx=10, pady=5, sticky="e")
         self.time_slot_dropdown = ttk.Combobox(form_frame, textvariable=self.booking_time_slot)
         self.time_slot_dropdown["values"] = []  # Initially empty
-        self.time_slot_dropdown.grid(row=2, column=1, padx=10, pady=5)
+        self.time_slot_dropdown.grid(row=1, column=1, padx=10, pady=5)
 
         # Location Dropdown
-        tk.Label(form_frame, text="Location:", bg="#f7f7f7").grid(row=3, column=0, padx=10, pady=5, sticky="e")
+        tk.Label(form_frame, text="Location:", bg="#f7f7f7").grid(row=2, column=0, padx=10, pady=5, sticky="e")
         self.location_dropdown = ttk.Combobox(form_frame, textvariable=self.location)
         self.location_dropdown["values"] = self.all_locations
         self.location_dropdown.bind("<<ComboboxSelected>>", self.update_shops_and_time_slots)
-        self.location_dropdown.grid(row=3, column=1, padx=10, pady=5)
+        self.location_dropdown.grid(row=2, column=1, padx=10, pady=5)
 
         # Buttons
         button_frame = tk.Frame(self.root, bg="#f7f7f7")
@@ -97,10 +112,34 @@ class BookingApp:
         tk.Button(button_frame, text=" View All Bookings", image=self.view_icon, compound="left", command=self.view_bookings).grid(row=0, column=1, padx=10, pady=10)
         tk.Button(button_frame, text=" Search Booking", image=self.search_icon, compound="left", command=self.search_booking).grid(row=0, column=2, padx=10, pady=10)
 
+    def create_shop_grid(self, parent_frame):
+        """Create a grid of shop logos."""
+        self.logo_buttons = []  # Store references to buttons to keep images in scope
+        row, col = 0, 0
+        for shop_name, logo in self.shop_logos.items():
+            btn = tk.Button(parent_frame, image=logo, command=lambda name=shop_name: self.select_shop(name))
+            btn.grid(row=row, column=col, padx=10, pady=10)
+
+            # Keep a reference to prevent garbage collection
+            self.logo_buttons.append(btn)
+
+            tk.Label(parent_frame, text=shop_name, bg="#f7f7f7").grid(row=row + 1, column=col, padx=10, pady=2)
+
+            col += 1
+            if col > 4:  # Adjust grid columns as needed
+                col = 0
+                row += 2
+
+    def select_shop(self, shop_name):
+        """
+        Select a shop by clicking its logo.
+        """
+        self.shop_name.set(shop_name)
+        self.update_location_and_time_slots(None)  # Update dependent fields
+
     def update_location_and_time_slots(self, event):
         """
         Updates the locations and time slots dropdowns based on the selected shop name.
-        Retains the current location and time slot if they are valid.
         """
         selected_shop = self.shop_name.get()
         valid_locations = LUXURY_SHOPS.get(selected_shop, self.all_locations)
@@ -118,8 +157,7 @@ class BookingApp:
 
     def update_shops_and_time_slots(self, event):
         """
-        Updates the shop names and time slots dropdowns based on the selected location.
-        Retains the current shop name and time slot if they are valid.
+        Updates the time slots based on the selected location.
         """
         selected_location = self.location.get()
         valid_shops = [
@@ -128,7 +166,6 @@ class BookingApp:
         current_shop = self.shop_name.get()
         if current_shop not in valid_shops:
             self.shop_name.set("")  # Clear shop name if invalid
-        self.shop_dropdown["values"] = valid_shops
 
         # Update time slots for the current shop if it's still valid
         valid_time_slots = SHOP_TIME_SLOTS.get(self.shop_name.get(), [])
@@ -140,7 +177,6 @@ class BookingApp:
     def submit_booking(self):
         """
         Handles the submission of a new booking.
-        Saves the username and email from the sign-in session along with the booking details.
         """
         data = {
             "user_name": self.username,
