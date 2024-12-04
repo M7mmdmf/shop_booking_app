@@ -5,6 +5,7 @@ from PIL import Image, ImageTk
 from constants import LUXURY_SHOPS, SHOP_LOCATIONS, SUCCESS_MESSAGES
 from validation import validate_all_fields
 from csv_handler import initialize_csv, save_booking, search_bookings, sort_bookings
+from auth_gui import AuthApp  # Importing the Sign In/Sign Up GUI
 
 class BookingApp:
     def __init__(self, root):
@@ -180,3 +181,20 @@ class BookingApp:
             messagebox.showinfo("Search Results", result_text)
         except Exception as e:
             messagebox.showerror("Error", str(e))
+
+
+# Launch the Sign In/Sign Up first, then proceed to the main booking app
+def main():
+    def launch_booking_app():
+        root = tk.Tk()
+        BookingApp(root)
+        root.mainloop()
+
+    # Launch the authentication GUI
+    root = tk.Tk()
+    AuthApp(root, on_success=launch_booking_app)
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    main()
