@@ -45,6 +45,9 @@ class BookingApp:
         self.load_shop_logos()
         self.load_icons()
 
+        # Track the selected shop button
+        self.selected_button = None
+
         # Layout
         self.create_widgets()
 
@@ -60,7 +63,6 @@ class BookingApp:
                     print(f"Logo not found for {shop_name}. Skipping.")
         except Exception as e:
             print(f"Error loading shop logos: {e}")
-
 
     def load_icons(self):
         """Load button icons."""
@@ -106,13 +108,17 @@ class BookingApp:
     def create_shop_grid(self, parent_frame):
         """Create a grid of shop logos."""
         self.logo_buttons = []  # Store references to buttons to keep images in scope
+        self.shop_button_refs = {}  # Map shop names to buttons
         row, col = 0, 0
         for shop_name, logo in self.shop_logos.items():
-            btn = tk.Button(parent_frame, image=logo, command=lambda name=shop_name: self.select_shop(name))
+            btn = tk.Button(
+                parent_frame, image=logo, command=lambda name=shop_name: self.select_shop(name)
+            )
             btn.grid(row=row, column=col, padx=10, pady=10)
 
-            # Keep a reference to prevent garbage collection
-            self.logo_buttons.append(btn)
+            # Keep references for access and update
+            self.shop_button_refs[shop_name] = btn
+            self.logo_buttons.append(btn)  # To prevent garbage collection
 
             tk.Label(parent_frame, text=shop_name, bg="#f7f7f7").grid(row=row + 1, column=col, padx=10, pady=2)
 
@@ -126,7 +132,17 @@ class BookingApp:
         Select a shop by clicking its logo.
         """
         self.shop_name.set(shop_name)
-        self.update_location_and_time_slots(None)  # Update dependent fields
+
+        # Highlight the selected button
+        if self.selected_button:
+            self.selected_button.config(relief="raised", bg="#f7f7f7")  # Reset previous button
+        current_button = self.shop_button_refs.get(shop_name)
+        if current_button:
+            current_button.config(relief="sunken", bg="blue")  # Highlight current button
+        self.selected_button = current_button  # Update reference
+
+        # Update dependent fields
+        self.update_location_and_time_slots(None)
 
     def update_location_and_time_slots(self, event):
         """
