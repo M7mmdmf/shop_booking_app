@@ -75,6 +75,7 @@ class AuthApp:
         if authenticate_user(identifier, password):
             messagebox.showinfo("Success", "Sign In successful!")
             self.root.destroy()  # Close the auth window
+            self.on_success(self.username.get(), self.email.get())  # Pass username and email to the main app
             self.on_success()  # Launch the main application
         else:
             messagebox.showerror("Error", "Invalid username/email or password!")
